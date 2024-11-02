@@ -1,0 +1,89 @@
+# Simulasi Pengontrol PID
+
+Simulasi ini menunjukkan respons sistem yang dikendalikan oleh pengontrol PID (Proporsional-Integral-Derivatif). Anda dapat mengatur parameter `Kp`, `Ki`, dan `Kd` untuk melihat bagaimana sistem merespons terhadap perubahan setpoint.
+
+<div style="display: flex; gap: 10px;">
+    <label for="kp">Kp (Proporsional):</label>
+    <input type="number" id="kp" value="1" step="0.1" style="width: 60px;">
+    <label for="ki">Ki (Integral):</label>
+    <input type="number" id="ki" value="0.1" step="0.1" style="width: 60px;">
+    <label for="kd">Kd (Derivatif):</label>
+    <input type="number" id="kd" value="0.05" step="0.1" style="width: 60px;">
+</div>
+
+<button onclick="startSimulation()" style="margin-top: 10px;">Mulai Simulasi</button>
+
+<canvas id="pidChart" width="800" height="400" style="margin-top: 20px;"></canvas>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let pidChart;
+    const time = [];
+    const outputData = [];
+    const setpoint = 1;
+
+    function calculatePID(kp, ki, kd, dt = 0.1, steps = 200) {
+        let integral = 0;
+        let previousError = 0;
+        let output = 0;
+
+        // Clear previous data
+        time.length = 0;
+        outputData.length = 0;
+
+        for (let i = 0; i < steps; i++) {
+            const currentTime = i * dt;
+            const error = setpoint - output;
+
+            integral += error * dt;
+            const derivative = (error - previousError) / dt;
+            output += kp * error + ki * integral + kd * derivative;
+
+            time.push(currentTime);
+            outputData.push(output);
+
+            previousError = error;
+        }
+    }
+
+    function startSimulation() {
+        const kp = parseFloat(document.getElementById("kp").value);
+        const ki = parseFloat(document.getElementById("ki").value);
+        const kd = parseFloat(document.getElementById("kd").value);
+
+        calculatePID(kp, ki, kd);
+
+        if (pidChart) pidChart.destroy();
+
+        const ctx = document.getElementById('pidChart').getContext('2d');
+        pidChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: time,
+                datasets: [
+                    {
+                        label: 'Output',
+                        data: outputData,
+                        borderColor: 'blue',
+                        fill: false,
+                    },
+                    {
+                        label: 'Setpoint',
+                        data: Array(time.length).fill(setpoint),
+                        borderColor: 'red',
+                        borderDash: [5, 5],
+                        fill: false,
+                    }
+                ]
+            },
+            options: {
+                scales: {
+                    x: { title: { display: true, text: 'Time (s)' } },
+                    y: { title: { display: true, text: 'Output' } }
+                }
+            }
+        });
+    }
+</script>
+
+> **Catatan**: Simulasi ini menggunakan JavaScript dan *Chart.js* untuk memvisualisasikan respons sistem kontrol PID. Silakan coba ubah nilai `Kp`, `Ki`, dan `Kd`, lalu klik "Mulai Simulasi" untuk melihat perubahannya.
